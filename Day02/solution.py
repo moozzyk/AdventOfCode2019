@@ -9,7 +9,7 @@ def run_program(program, noun, verb):
         elif program[ip] == 2:
             program[program[ip + 3]] = program[program[ip + 1]] * \
                 program[program[ip + 2]]
-        elif program[ip]:
+        elif program[ip] == 99:
             return program[0]
         ip += 4
     return -1
