@@ -22,7 +22,7 @@ def path_to_points(path):
             y += d_y
             points.append((x, y))
 
-    return points    
+    return points
 
 
 def problem1(path1, path2):
@@ -35,9 +35,24 @@ def problem1(path1, path2):
     return min_dist
 
 
+def problem2(path1, path2):
+    points1 = path_to_points(path1)
+    points2 = path_to_points(path2)
+    points_set = set(points2)
+    min_path = len(points1) + len(points2)
+    steps = 0
+    for p in points1:
+        if p in points_set:
+            idx = points2.index(p)
+            min_path = min(min_path, steps + idx)
+        steps += 1
+
+    # point(0, 0) so need to add to steps - one for each path
+    return min_path + 2
+
+
 with open("input.txt", "r") as f:
-    path1 = split_path(f.readline())
-    path2 = split_path(f.readline())
+    path1 = list(split_path(f.readline()))
+    path2 = list(split_path(f.readline()))
     print(problem1(path1, path2))
-    # print(path_to_points(path1))
-    # print(list(path1))
+    print(problem2(path1, path2))
