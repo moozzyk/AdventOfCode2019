@@ -3,35 +3,33 @@ import sys
 
 class Intcode:
     def __init__(self, program, input, output):
-        self.program = program
+        self.memory = {i: program[i] for i in range(len(program))}
         self.input = input
         self.output = output
         self.ip = 0
         self.base = 0
-        self.memory = dict()
+
+    def get_value_at(self, address):
+        return self.memory.get(address, 0)
 
     def get_value(self, mode, offset):
         address = self.ip + offset
         if mode == 0:
-            # return self.memory.get(self.program[address], 0)
-            return self.program[self.program[address]]
+            return self.get_value_at(self.get_value_at(address))
         if mode == 2:
-            # return self.memory.get(self.base + self.program[address], 0)
-            return self.program[self.base + self.program[address]]
-        # return self.memory.get(address, 0)
-        return self.program[address]
+            return self.get_value_at(self.base + self.get_value_at(address))
+        return self.get_value_at(address)
 
     def set_value(self, mode, offset, value):
-        address = self.program[self.ip + offset]
+        address = self.get_value_at(self.ip + offset)
         if mode == 2:
             address = self.base + address
-        self.program[address] = value
-        # self.memory[address] = value
+        self.memory[address] = value
 
     def run(self):
-        while self.ip < len(self.program):
-            opcode = self.program[self.ip] % 100
-            modes = self.program[self.ip] // 100
+        while True:
+            opcode = self.get_value_at(self.ip) % 100
+            modes = self.get_value_at(self.ip) // 100
             m1 = modes % 10
             modes = modes // 10
             m2 = modes % 10
@@ -83,8 +81,6 @@ class Intcode:
 
 
 def solve(program, input_val):
-    program = list(program)
-    program.extend([0] * 1000)
     output = []
     intcode = Intcode(program, [input_val], output)
     intcode.run()
