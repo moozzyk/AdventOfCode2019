@@ -94,3 +94,4 @@ def solve(program, input_val):
 with open(sys.argv[1], "r") as f:
     program = list(map(lambda n: int(n), f.readline().split(",")))
     solve(program, 1)
+    solve(program, 2)
