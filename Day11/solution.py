@@ -85,15 +85,15 @@ class Intcode:
 #  - 1 - >
 #  - 2 - v
 #  - 3 - <
-def problem1(program):
+def paint(program, color):
     turns = [-1, 1]
     visited = dict()
     x, y, direction = 0, 0, 0
-    input, output = [], []
+    input, output = [color], []
     cpu = Intcode(program, input, output)
     while True:
-        current_color = visited.get((x, y), 0)
-        input.append(current_color)
+        if not input:
+            input.append(visited.get((x, y), 0))
         if cpu.run():
             break
         last_color = output.pop(0)
@@ -108,9 +108,29 @@ def problem1(program):
             y += 1
         elif direction == 3:
             x -= 1
-    print(len(visited))
+    return visited
+
+
+def draw(painted):
+    screen = [[" "] * 43 for i in range(6)]
+    for (x, y), color in painted.items():
+        screen[y][x] = ' ' if color == 0 else '#'
+
+    for l in screen:
+        print("".join(l))
+
+
+def problem1(program):
+    painted = paint(program, 0)
+    print(len(painted))
+
+
+def problem2(program):
+    painted = paint(program, 1)
+    draw(painted)
 
 
 with open(sys.argv[1], "r") as f:
     program = list(map(lambda n: int(n), f.readline().split(",")))
     problem1(program)
+    problem2(program)
