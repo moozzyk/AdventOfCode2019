@@ -1,3 +1,7 @@
+import math
+import copy
+
+
 def calculate_energy(values):
     result = []
     for v in values:
@@ -28,7 +32,6 @@ def problem1(moons):
     velocities = [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]]
     for _ in range(1000):
         update_velocity(moons, velocities)
-        print(moons, velocities)
 
     pot = calculate_energy(moons)
     kin = calculate_energy(velocities)
@@ -38,5 +41,39 @@ def problem1(moons):
     print(total)
 
 
+def lcm(n1, n2):
+    return (n1 * n2)//math.gcd(n1, n2)
+
+
+def problem2(moons):
+    initial = copy.deepcopy(moons)
+    velocities = [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]]
+    zero_points = [[set(), set(), set()] for _ in moons]
+    periods = [[0] * 3 for _ in velocities]
+    step = 0
+    while any(0 in l for l in periods):
+        for m in range(len(velocities)):
+            for c in range(len(velocities[m])):
+                if velocities[m][c] != 0 or moons[m][c] != initial[m][c]:
+                    continue
+                if periods[m][c]:
+                    continue
+                if step % 2 == 0 and step // 2 in zero_points[m][c]:
+                    periods[m][c] = step // 2
+                zero_points[m][c].add(step)
+        update_velocity(moons, velocities)
+        step += 1
+
+    result = 1
+    for p in periods:
+        moon_result = 1
+        for n in p:
+            moon_result = lcm(moon_result, n)
+        result = lcm(result, moon_result)
+
+    print(result)
+
+
 moons = [[17, -7, -11], [1, 4, -1], [6, -2, -6], [19, 11, 9]]
-problem1(list(moons))
+problem1(copy.deepcopy(moons))
+problem2(copy.deepcopy(moons))
