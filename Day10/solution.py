@@ -1,57 +1,98 @@
-import copy
+import math
 import sys
 
 
-def block_line(map, from_row, from_col, d_y, d_x):
-    found = False
+def print_sky(sky):
+    for l in sky:
+        print("".join(l))
+    print()
+
+
+def atan2(beam_pos, star_pos):
+    return math.atan2(star_pos[1] - beam_pos[1], star_pos[0] - beam_pos[0])
+
+
+def distance(beam_pos, star_pos):
+    return (star_pos[0] - beam_pos[0]) ** 2 + (star_pos[1] - beam_pos[1]) ** 2
+
+
+def sort_stars(stars, beam_pos):
+    return sorted(stars,
+                  key=lambda s: (atan2(beam_pos, s), -distance(beam_pos, s)),
+                  reverse=True)
+
+
+def get_stars(sky):
+    stars = []
+    for row in range(len(sky)):
+        for col in range(len(sky[row])):
+            if sky[row][col] == "#":
+                stars.append((row, col))
+    return stars
+
+
+def get_max_num_visible(sky):
+    stars = get_stars(sky)
+
+    last_atan = -100
+    max_num_visible = -1
+    max_num_visible_star = (-1, -1)
+    for orig in stars:
+        ordered = sort_stars(stars, orig)
+        num_visible = 0
+        for dest in ordered:
+            if orig == dest:
+                continue
+            new_atan = atan2(orig, dest)
+            if new_atan != last_atan:
+                num_visible += 1
+                last_atan = new_atan
+        if num_visible > max_num_visible:
+            max_num_visible = num_visible
+            max_num_visible_star = orig
+    return (max_num_visible, max_num_visible_star)
+
+
+def shoot_stars(beam_pos, sky):
+    stars = sort_stars(get_stars(sky), beam_pos)
+    idx = 0
+    shoot = True
+    last_atan = -100
+    num_shot = 0
     while True:
-        from_row += d_y
-        from_col += d_x
-        if (from_row < 0 or from_col < 0 or from_row >= len(map) or from_col >= len(map[0])):
-            break
-        if found:
-            map[from_row][from_col] = "$"
-        if map[from_row][from_col] == "#":
-            found = True    
+        star_pos = stars[idx]
+        if sky[star_pos[0]][star_pos[1]] != "#":
+            continue
+        new_atan = atan2(beam_pos, stars[idx])
+        if not shoot:
+            shoot = new_atan != last_atan
+        last_atan = new_atan
+
+        if shoot:
+            sky[star_pos[0]][star_pos[1]] = str(num_shot % 10)
+            num_shot += 1
+            if num_shot == 200:
+                return star_pos
+            shoot = False
+            last_atan = new_atan
+        idx = (idx + 1) % len(stars)
 
 
-def block(map, from_row, from_col):
-    for d_y in range(-len(map), len(map)):
-        for d_x in range(-len(map[from_row]), len(map[from_row])):
-            if not(d_x == 0 and d_y == 0):
-                block_line(map, from_row, from_col, d_y, d_x)
-            
-
-def get_num_visible(map, row, col):
-    if map[row][col] != "#":
-        return 0
-
-    map = copy.deepcopy(map)
-    map[row][col] = "*"
-    for to_row in range(len(map)):
-        for to_col in range(len(map[to_row])):
-            if map[to_row][to_col] == "#":
-                block(map, row, col)
-
-    num_visible = 0
-    for line in map:
-        num_visible += line.count('#')
-    return num_visible
+def problem1(sky):
+    (max_num_visible, _) = get_max_num_visible(sky)
+    print(max_num_visible)
 
 
-def problem1(map):
-    max_num_visible, r, c = 0, -1, -1
-    for row in range(len(map)):
-        for col in range(len(map[row])):
-            num_visible = get_num_visible(map, row, col)
-            if num_visible > max_num_visible:
-                max_num_visible, r, c = num_visible, row, col
-
-    print(max_num_visible, r, c)
+def problem2(sky):
+    (_, beam_pos) = get_max_num_visible(sky)
+    (last_shot_row, last_shot_col) = shoot_stars(beam_pos, sky)
+    print(last_shot_col * 100 + last_shot_row)
 
 
 with open(sys.argv[1], "r") as f:
-    map = []
+    sky = []
     for line in f.read().splitlines():
-        map.append(list(line))
-    problem1(map)
+        sky.append(list(line))
+
+    problem1(sky)
+    problem2(sky)
